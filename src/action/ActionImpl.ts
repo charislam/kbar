@@ -33,6 +33,7 @@ export class ActionImpl implements Action {
    */
   perform: Action["perform"];
   priority: number = Priority.NORMAL;
+  pinned: Action["pinned"];
 
   command?: Command;
 
@@ -57,6 +58,7 @@ export class ActionImpl implements Action {
       );
     // Backwards compatibility
     this.perform = this.command?.perform;
+    this.pinned = action.pinned ?? false;
 
     if (action.parent) {
       const parentActionImpl = options.store[action.parent];

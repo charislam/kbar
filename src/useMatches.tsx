@@ -94,9 +94,17 @@ export function useMatches() {
     return getDeepResults(rootResults);
   }, [getDeepResults, rootResults, emptySearch]);
 
-  const fuse = React.useMemo(() => new Fuse(filtered, fuseOptions), [filtered]);
+  const pinned = React.useMemo(() => {
+    return filtered.filter((action) => action.pinned);
+  }, [filtered]);
 
-  const matches = useInternalMatches(filtered, search, fuse);
+  const unpinned = React.useMemo(() => {
+    return filtered.filter((action) => !action.pinned);
+  }, [filtered]);
+
+  const fuse = React.useMemo(() => new Fuse(unpinned, fuseOptions), [unpinned]);
+
+  const matches = useInternalMatches(unpinned, search, fuse);
 
   const results = React.useMemo(() => {
     /**
@@ -151,20 +159,54 @@ export function useMatches() {
       actions: map[group.name].sort(order).map((item) => item.action),
     }));
 
+    const pinnedSections: Record<SectionName, ActionImpl[]> =
+      Object.create(null);
+
+    for (const pinnedAction of pinned) {
+      const group = pinnedAction.section
+        ? typeof pinnedAction.section === "string"
+          ? pinnedAction.section
+          : pinnedAction.section.name
+        : NO_GROUP.name;
+      if (!(group in pinnedSections)) {
+        pinnedSections[group] = [];
+      }
+      pinnedSections[group].push(pinnedAction);
+    }
+
     /**
-     * Our final result is simply flattening the ordered list into
-     * our familiar (ActionImpl | string)[] shape.
+     * Our final result is adding the pinned actions, then flattening
+     * the ordered list into our familiar (ActionImpl | string)[] shape.
      */
     let results: (string | ActionImpl)[] = [];
+    const seen = new Set<SectionName>();
+
+    for (const section of ordered) {
+      if (section.name in pinnedSections) {
+        pinnedSections[section.name].push(...section.actions);
+        seen.add(section.name);
+      }
+    }
+
+    for (const pinned in pinnedSections) {
+      if (pinned !== NO_GROUP.name) results.push(pinned);
+      for (const action of pinnedSections[pinned]) {
+        results.push(action);
+      }
+    }
+
     for (let i = 0; i < ordered.length; i++) {
       let group = ordered[i];
+
+      if (seen.has(group.name)) continue;
+
       if (group.name !== NO_GROUP.name) results.push(group.name);
       for (let i = 0; i < group.actions.length; i++) {
         results.push(group.actions[i]);
       }
     }
     return results;
-  }, [matches]);
+  }, [matches, pinned]);
 
   // ensure that users have an accurate `currentRootActionId`
   // that syncs with the throttled return value.

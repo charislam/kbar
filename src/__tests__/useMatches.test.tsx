@@ -13,7 +13,7 @@ jest.mock("../utils", () => {
   return {
     ...jest.requireActual("../utils"),
     // Mock out throttling as we don't need it in our test environment.
-    useThrottledValue: (value) => value,
+    useThrottledValue: (value: unknown) => value,
   };
 });
 
@@ -83,6 +83,29 @@ function WithPriorityComponent() {
 
   return (
     <KBarProvider actions={[action1, action2, action3, action4, childAction1]}>
+      <Search />
+      <Results />
+    </KBarProvider>
+  );
+}
+
+function WithPinnedComponent() {
+  const action1 = createAction({
+    name: "Action: unmatching but pinned",
+    pinned: true,
+  });
+  const action2 = createAction({ name: "Action: exact" });
+  const action3 = createAction({ name: "Action: includes exact" });
+  const action4 = createAction({
+    name: "Action: exact in section",
+    section: "section",
+  });
+  const action5 = createAction({
+    name: "Action: unmatching",
+  });
+
+  return (
+    <KBarProvider actions={[action1, action2, action3, action4, action5]}>
       <Search />
       <Results />
     </KBarProvider>
@@ -162,6 +185,28 @@ describe("useMatches", () => {
       expect(utils.queryAllByText(/Section 1/i));
     });
   });
+
+  describe("With pinned", () => {
+    let utils: Utils;
+    beforeEach(() => {
+      utils = setup(WithPinnedComponent);
+    });
+
+    it("returns a list with pinned and matching actions", () => {
+      const { input } = utils;
+      fireEvent.change(input, { target: { value: "exact" } });
+      const results = utils.getAllByText(/Action/i);
+      expect(results.length).toEqual(4);
+
+      expect(results[0].textContent).toEqual("Action: unmatching but pinned");
+      expect(results[1].textContent).toEqual("Action: exact");
+      expect(results[2].textContent).toEqual("Action: includes exact");
+      expect(results[3].textContent).toEqual("Action: exact in section");
+
+      expect(utils.queryAllByText(/section/i));
+    });
+  });
+
   describe("With long names", () => {
     let utils: Utils;
     beforeEach(() => {

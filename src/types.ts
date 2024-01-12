@@ -23,6 +23,7 @@ export type Action = {
   perform?: (currentActionImpl: ActionImpl) => any;
   parent?: ActionId;
   priority?: Priority;
+  pinned?: boolean; // pinned actions are never filtered out
 };
 
 export type ActionStore = Record<ActionId, ActionImpl>;
