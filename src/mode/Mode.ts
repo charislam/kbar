@@ -1,6 +1,8 @@
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "use-sync-external-store/shim";
 
 type ModeEvent = "change";
+
+export const DEFAULT_MODE = "command" as const;
 
 export class Mode {
   private modes: Set<String>;
@@ -8,8 +10,8 @@ export class Mode {
   private subscribers: Record<ModeEvent, ((mode: string) => any)[]>;
 
   constructor() {
-    this.modes = new Set(["command"]);
-    this.stack = ["command"];
+    this.modes = new Set([DEFAULT_MODE]);
+    this.stack = [DEFAULT_MODE];
     this.subscribers = { change: [] };
   }
 
@@ -22,7 +24,7 @@ export class Mode {
   }
 
   setMode(mode: string) {
-    if (!this.modes.has(mode)) {
+    if (this.currentMode === mode || !this.modes.has(mode)) {
       return false;
     }
     this.stack.push(mode);
@@ -59,15 +61,13 @@ export class Mode {
           throw Error(`Invalid event requested in subscription: ${event}`);
       }
     }
-    return {
-      unsubscribe: () => {
-        for (const event in this.subscribers) {
-          const idx = this.subscribers[event].indexOf(fn);
-          if (idx !== -1) {
-            this.subscribers[event].splice(idx, 1);
-          }
+    return () => {
+      for (const event in this.subscribers) {
+        const idx = this.subscribers[event].indexOf(fn);
+        if (idx !== -1) {
+          this.subscribers[event].splice(idx, 1);
         }
-      },
+      }
     };
   }
 
@@ -87,7 +87,7 @@ export function useKbarMode() {
   const mode = useSyncExternalStore(
     subscribeModeChanges,
     modeController.getCurrentMode,
-    subscribeModeChanges
+    modeController.getCurrentMode
   );
 
   return { mode, setMode: modeController.setMode };
