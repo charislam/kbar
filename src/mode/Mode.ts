@@ -1,5 +1,3 @@
-import { useSyncExternalStore } from "use-sync-external-store/shim";
-
 type ModeEvent = "change";
 
 export const DEFAULT_MODE = "command" as const;
@@ -47,10 +45,6 @@ export class Mode {
     return this.stack.at(-1);
   }
 
-  getCurrentMode() {
-    return this.currentMode;
-  }
-
   subscribe(events: ModeEvent[], fn: (mode: string) => any) {
     for (const event of events) {
       switch (event) {
@@ -76,19 +70,4 @@ export class Mode {
       subscriber(currMode);
     }
   }
-}
-
-const modeController = new Mode();
-const subscribeModeChanges = modeController.subscribe.bind(modeController, [
-  "change",
-]);
-
-export function useKbarMode() {
-  const mode = useSyncExternalStore(
-    subscribeModeChanges,
-    modeController.getCurrentMode,
-    modeController.getCurrentMode
-  );
-
-  return { mode, setMode: modeController.setMode };
 }

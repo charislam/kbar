@@ -6,6 +6,19 @@ export function swallowEvent(event) {
   event.preventDefault();
 }
 
+/**
+ * Create a value that is stable across renders because it doesn't expose its
+ * setter.
+ *
+ * Allows a value to be initiated only on first render, and for its reference
+ * to be stable afterwards for memoization purposes.
+ **/
+
+export function useInitializedValue<T>(initValue: () => T) {
+  const [value] = React.useState(initValue);
+  return value;
+}
+
 export function useOuterClick(
   dom: React.RefObject<HTMLElement>,
   cb: () => void
