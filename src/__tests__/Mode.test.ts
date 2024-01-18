@@ -82,6 +82,7 @@ describe("mode class", () => {
     expect(fn).toHaveBeenCalledTimes(1);
 
     unsubscribe();
+    mode.exitMode();
     expect(fn).toHaveBeenCalledTimes(1);
   });
 });
