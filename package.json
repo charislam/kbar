@@ -7,7 +7,7 @@
     "build": "rm -rf ./lib & tsc",
     "test": "jest src",
     "test:watch": "jest src --watch",
-    "lint": "eslint src/**/* example/src/**/* --ext .js,.ts,.tsx",
+    "lint": "eslint src/**/* --ext .js,.ts,.tsx",
     "typecheck": "tsc --noEmit"
   },
   "babel": {
