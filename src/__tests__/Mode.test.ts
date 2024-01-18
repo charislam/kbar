@@ -25,6 +25,19 @@ describe("mode class", () => {
     expect(mode.currentMode).toBe(modeName);
   });
 
+  it("can unregister a mode", () => {
+    const modeName = "test";
+    const unregister = mode.registerMode(modeName);
+    mode.setMode(modeName);
+
+    unregister?.();
+    expect(mode.currentMode).toBe(DEFAULT_MODE);
+
+    const result = mode.setMode(modeName);
+    expect(result).toBe(false);
+    expect(mode.currentMode).toBe(DEFAULT_MODE);
+  });
+
   it("exiting a mode returns the previous mode", () => {
     const firstMode = "first";
     const secondMode = "second";

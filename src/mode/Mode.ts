@@ -15,10 +15,20 @@ export class Mode {
 
   registerMode(newMode: string) {
     if (this.modes.has(newMode)) {
-      return false;
+      return null;
     }
     this.modes.add(newMode);
-    return true;
+    return this.unregisterMode.bind(this, newMode);
+  }
+
+  private unregisterMode(mode: string) {
+    if (mode === DEFAULT_MODE) {
+      return false;
+    }
+    if (mode === this.currentMode) {
+      this.exitMode();
+    }
+    return this.modes.delete(mode);
   }
 
   setMode(mode: string) {
