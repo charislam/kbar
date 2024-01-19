@@ -1,10 +1,12 @@
 import { DEFAULT_MODE, Mode } from "../mode/Mode";
 
+const DEFAULT_DATA = "default data";
+
 describe("mode class", () => {
-  let mode: Mode;
+  let mode: Mode<{ data: string }>;
 
   beforeEach(() => {
-    mode = new Mode();
+    mode = new Mode({ data: DEFAULT_DATA });
   });
 
   it("mode is initiated in command mode", () => {
@@ -19,15 +21,28 @@ describe("mode class", () => {
 
   it("setting a registered mode succeeds", () => {
     const modeName = "registered";
-    mode.registerMode(modeName);
+    const modeValue = { data: "registered data" };
+    mode.registerMode(modeName, modeValue);
     const result = mode.setMode(modeName);
     expect(result).toBe(true);
     expect(mode.currentMode).toBe(modeName);
   });
 
+  it("can get data for current mode", () => {
+    expect(mode.currentValue!.data).toBe(DEFAULT_DATA);
+
+    const modeName = "test";
+    const modeValue = { data: "test data" };
+    mode.registerMode(modeName, modeValue);
+    mode.setMode(modeName);
+
+    expect(mode.currentValue!.data).toBe(modeValue.data);
+  });
+
   it("can unregister a mode", () => {
     const modeName = "test";
-    const unregister = mode.registerMode(modeName);
+    const modeValue = { data: "test data" };
+    const unregister = mode.registerMode(modeName, modeValue);
     mode.setMode(modeName);
 
     unregister?.();
@@ -40,9 +55,11 @@ describe("mode class", () => {
 
   it("exiting a mode returns the previous mode", () => {
     const firstMode = "first";
+    const firstValue = { data: "first value" };
     const secondMode = "second";
-    mode.registerMode(firstMode);
-    mode.registerMode(secondMode);
+    const secondValue = { data: "second value" };
+    mode.registerMode(firstMode, firstValue);
+    mode.registerMode(secondMode, secondValue);
 
     mode.setMode(firstMode);
     mode.setMode(secondMode);
@@ -61,7 +78,8 @@ describe("mode class", () => {
 
   it("change listeners are notified on mode set and mode exit", () => {
     const newMode = "test";
-    mode.registerMode(newMode);
+    const newValue = { data: "test value" };
+    mode.registerMode(newMode, newValue);
     const fn = jest.fn();
     mode.subscribe(["change"], fn);
 
@@ -76,7 +94,8 @@ describe("mode class", () => {
 
   it("change listeners are not notified if same mode set twice in a row (idempotent)", () => {
     const newMode = "test";
-    mode.registerMode(newMode);
+    const newValue = { data: "test value" };
+    mode.registerMode(newMode, newValue);
     const fn = jest.fn();
     mode.subscribe(["change"], fn);
 
@@ -87,7 +106,8 @@ describe("mode class", () => {
 
   it("change listeners are not notified after unsubscribe", () => {
     const newMode = "test";
-    mode.registerMode(newMode);
+    const newValue = { data: "test value" };
+    mode.registerMode(newMode, newValue);
     const fn = jest.fn();
     const unsubscribe = mode.subscribe(["change"], fn);
 
