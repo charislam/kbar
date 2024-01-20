@@ -87,5 +87,10 @@ describe("useKBarMode", () => {
       utils.mode.setMode(newMode);
     });
     expect(renderCount).toBe(2);
+
+    act(() => {
+      utils.mode.setMode(newMode);
+    });
+    expect(renderCount).toBe(2);
   });
 });
