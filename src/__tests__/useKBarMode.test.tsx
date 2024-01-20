@@ -14,7 +14,7 @@ let renderCount = 0;
 function ModeValue({ mode }: { mode: Mode<object> }) {
   renderCount++;
 
-  const currentMode = useKBarMode(mode);
+  const [currentMode] = useKBarMode(mode);
 
   return <p data-testid="mode-value">{currentMode}</p>;
 }
