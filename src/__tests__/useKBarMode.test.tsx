@@ -11,15 +11,15 @@ import { useKBarMode } from "../mode/useKBarMode";
 
 let renderCount = 0;
 
-function ModeValue({ mode }: { mode: Mode }) {
+function ModeValue({ mode }: { mode: Mode<object> }) {
   renderCount++;
 
-  const currentMode = useKBarMode(mode);
+  const [currentMode] = useKBarMode(mode);
 
   return <p data-testid="mode-value">{currentMode}</p>;
 }
 
-function Component({ mode }: { mode: Mode }) {
+function Component({ mode }: { mode: Mode<object> }) {
   return (
     <KBarProvider>
       <ModeValue mode={mode} />
@@ -27,9 +27,9 @@ function Component({ mode }: { mode: Mode }) {
   );
 }
 
-const setup = (Component: React.ComponentType<{ mode: Mode }>) => {
+const setup = (Component: React.ComponentType<{ mode: Mode<object> }>) => {
   renderCount = 0;
-  const mode = new Mode();
+  const mode = new Mode({});
   const utils = render(<Component mode={mode} />);
   const renderedMode = () => utils.getByTestId("mode-value").textContent;
   return {
@@ -39,7 +39,7 @@ const setup = (Component: React.ComponentType<{ mode: Mode }>) => {
   } as Utils;
 };
 
-type Utils = RenderResult & { renderedMode: () => string; mode: Mode };
+type Utils = RenderResult & { renderedMode: () => string; mode: Mode<object> };
 
 describe("useKBarMode", () => {
   let utils: Utils;
@@ -57,7 +57,7 @@ describe("useKBarMode", () => {
   it("setting mode from outside component triggers state update", () => {
     const newMode = "test";
     act(() => {
-      utils.mode.registerMode(newMode);
+      utils.mode.registerMode(newMode, {});
       utils.mode.setMode(newMode);
     });
     expect(utils.renderedMode()).toBe(newMode);
@@ -66,7 +66,7 @@ describe("useKBarMode", () => {
   it("exiting mode from outside component triggers state update", () => {
     const newMode = "test";
     act(() => {
-      utils.mode.registerMode(newMode);
+      utils.mode.registerMode(newMode, {});
       utils.mode.setMode(newMode);
       utils.mode.exitMode();
     });
@@ -79,9 +79,14 @@ describe("useKBarMode", () => {
     expect(renderCount).toBe(1);
 
     act(() => {
-      utils.mode.registerMode(newMode);
+      utils.mode.registerMode(newMode, {});
     });
     expect(renderCount).toBe(1);
+
+    act(() => {
+      utils.mode.setMode(newMode);
+    });
+    expect(renderCount).toBe(2);
 
     act(() => {
       utils.mode.setMode(newMode);

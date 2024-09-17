@@ -2,22 +2,22 @@ type ModeEvent = "change";
 
 export const DEFAULT_MODE = "command" as const;
 
-export class Mode {
-  private modes: Set<String>;
+export class Mode<T extends object> {
+  private modes: Map<String, T>;
   private stack: string[];
   private subscribers: Record<ModeEvent, ((mode: string) => any)[]>;
 
-  constructor() {
-    this.modes = new Set([DEFAULT_MODE]);
+  constructor(defaultData: T) {
+    this.modes = new Map([[DEFAULT_MODE, defaultData]]);
     this.stack = [DEFAULT_MODE];
     this.subscribers = { change: [] };
   }
 
-  registerMode(newMode: string) {
+  registerMode(newMode: string, data: T) {
     if (this.modes.has(newMode)) {
       return null;
     }
-    this.modes.add(newMode);
+    this.modes.set(newMode, data);
     return this.unregisterMode.bind(this, newMode);
   }
 
@@ -53,6 +53,10 @@ export class Mode {
 
   get currentMode() {
     return this.stack.at(-1);
+  }
+
+  get currentValue() {
+    return this.modes.get(this.currentMode!);
   }
 
   subscribe(events: ModeEvent[], fn: (mode: string) => any) {
